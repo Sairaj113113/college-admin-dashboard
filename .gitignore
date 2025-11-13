@@ -1,3 +1,4 @@
+cat > .gitignore << 'EOF'
 # Node (React)
 frontend/node_modules/
 frontend/build/
@@ -7,6 +8,7 @@ backend/venv/
 __pycache__/
 *.pyc
 
-# Logs and env
-*.log
+# Env & logs
 .env
+*.log
+EOF

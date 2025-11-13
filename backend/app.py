@@ -2,15 +2,16 @@ from flask import Flask, send_from_directory, render_template
 from flask_cors import CORS
 
 # Import blueprints
-from routes.students import students_bp
-from routes.courses import courses_bp
-from routes.auth import auth_bp
-from routes.results import results_bp
-from routes.fees import fees_bp
-from routes.faculty import faculty_bp
-from routes.attendance import attendance_bp
-from routes.feedback import feedback_bp
-from routes.analysis import analysis_bp
+from backend.routes.students import students_bp
+from backend.routes.courses import courses_bp
+from backend.routes.auth import auth_bp
+from backend.routes.results import results_bp
+from backend.routes.fees import fees_bp
+from backend.routes.faculty import faculty_bp
+from backend.routes.attendance import attendance_bp
+from backend.routes.feedback import feedback_bp
+from backend.routes.analysis import analysis_bp
+
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 

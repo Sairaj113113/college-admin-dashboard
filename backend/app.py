@@ -33,8 +33,8 @@ app.register_blueprint(analysis_bp, url_prefix="/api/analysis")
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve_react(path):
-    if path.startswith("static/"):
-        return send_from_directory(app.static_folder, path.replace("static/", ""), max_age=0)
+    if path.startswith("js/") or path.startswith("css/") or path.startswith("media/"):
+        return send_from_directory(os.path.join(app.static_folder, path.split("/")[0]), "/".join(path.split("/")[1:]))
     return render_template("index.html")
 
 # ✅ Optional health check

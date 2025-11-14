@@ -25,6 +25,7 @@ function Login() {
 
   useEffect(() => {
     if (isDemo) {
+      // ✅ Auto-fill demo credentials and login
       setUsername("admin");
       setPassword("admin123");
       handleLogin();

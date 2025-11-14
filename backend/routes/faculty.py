@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from backend.database import SessionLocal, engine
-from backend.import Base, Faculty
+from backend.models import Base, Faculty
 
 faculty_bp = Blueprint("faculty", __name__)
 Base.metadata.create_all(bind=engine)

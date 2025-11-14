@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from backend.database import SessionLocal, engine
-from models import Base, Attendance
+from backend.models import Base, Attendance
 
 # Create blueprint
 attendance_bp = Blueprint("attendance", __name__)

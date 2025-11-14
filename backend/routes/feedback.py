@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from backend.database import SessionLocal, engine
-from models import Base, Feedback
+from backend.models import Base, Feedback
 
 feedback_bp = Blueprint("feedback", __name__)
 Base.metadata.create_all(bind=engine)

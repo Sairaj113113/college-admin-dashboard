@@ -1,17 +1,17 @@
-from flask import Flask, send_from_directory, render_template
+import os
+from flask import Flask, send_from_directory, render_template, request, jsonify
 from flask_cors import CORS
 
-# Import blueprints
-from backend.routes.students import students_bp
-from backend.routes.courses import courses_bp
-from backend.routes.auth import auth_bp
-from backend.routes.results import results_bp
-from backend.routes.fees import fees_bp
-from backend.routes.faculty import faculty_bp
-from backend.routes.attendance import attendance_bp
-from backend.routes.feedback import feedback_bp
-from backend.routes.analysis import analysis_bp
-
+# ✅ Import blueprints (no 'backend.' prefix since you're inside backend/)
+from routes.students import students_bp
+from routes.courses import courses_bp
+from routes.auth import auth_bp
+from routes.results import results_bp
+from routes.fees import fees_bp
+from routes.faculty import faculty_bp
+from routes.attendance import attendance_bp
+from routes.feedback import feedback_bp
+from routes.analysis import analysis_bp
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
@@ -29,12 +29,36 @@ app.register_blueprint(attendance_bp, url_prefix="/api/attendance")
 app.register_blueprint(feedback_bp, url_prefix="/api/feedback")
 app.register_blueprint(analysis_bp, url_prefix="/api/analysis")
 
+# ✅ Prediction API (direct logic, no pickle needed)
+@app.route("/api/predict", methods=["POST"])
+def predict():
+    try:
+        data = request.json
+        attendance = data.get("attendance")
+        marks = data.get("marks")
+
+        if attendance is None or marks is None:
+            return jsonify({"error": "Missing attendance or marks"}), 400
+
+        # Simple risk logic
+        if attendance < 75 or marks < 50:
+            status = "At Risk"
+        else:
+            status = "Safe"
+
+        return jsonify({"status": status})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # ✅ Serve React frontend
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve_react(path):
-    if path.startswith("js/") or path.startswith("css/") or path.startswith("media/"):
-        return send_from_directory(os.path.join(app.static_folder, path.split("/")[0]), "/".join(path.split("/")[1:]))
+    if path.startswith(("js/", "css/", "media/")):
+        return send_from_directory(
+            os.path.join(app.static_folder, path.split("/")[0]),
+            "/".join(path.split("/")[1:])
+        )
     return render_template("index.html")
 
 # ✅ Optional health check

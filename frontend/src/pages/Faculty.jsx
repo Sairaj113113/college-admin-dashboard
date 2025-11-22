@@ -18,6 +18,12 @@ function Faculty() {
   const [faculty, setFaculty] = useState([]);
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // edit states
+  const [editId, setEditId] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editDepartment, setEditDepartment] = useState("");
 
   useEffect(() => {
     fetchFaculty();
@@ -43,6 +49,28 @@ function Faculty() {
       console.error("Error deleting faculty:", err);
     }
   };
+
+  const handleEdit = (f) => {
+    setEditId(f.id);
+    setEditName(f.name);
+    setEditDepartment(f.department);
+  };
+
+  const handleUpdate = async () => {
+    await api.put(`/api/faculty/${editId}/`, {
+      name: editName,
+      department: editDepartment
+    });
+    fetchFaculty();
+    setEditId(null);
+    setEditName("");
+    setEditDepartment("");
+  };
+
+  const filteredFaculty = faculty.filter(f =>
+    f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    f.department.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Grid container spacing={2} style={{ padding: 20 }}>
@@ -79,6 +107,17 @@ function Faculty() {
         </Card>
       </Grid>
 
+      {/* Search Bar */}
+      <Grid item xs={12}>
+        <TextField
+          label="Search Faculty"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          fullWidth
+          margin="normal"
+        />
+      </Grid>
+
       {/* Table Card */}
       <Grid item xs={12}>
         <Card>
@@ -96,20 +135,45 @@ function Faculty() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {faculty.length > 0 ? (
-                  faculty.map((f) => (
+                {filteredFaculty.length > 0 ? (
+                  filteredFaculty.map((f) => (
                     <TableRow key={f.id}>
                       <TableCell>{f.id}</TableCell>
-                      <TableCell>{f.name}</TableCell>
-                      <TableCell>{f.department}</TableCell>
                       <TableCell>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={() => handleDelete(f.id)}
-                        >
-                          Delete
-                        </Button>
+                        {editId === f.id ? (
+                          <TextField value={editName} onChange={e => setEditName(e.target.value)} />
+                        ) : (
+                          f.name
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editId === f.id ? (
+                          <TextField value={editDepartment} onChange={e => setEditDepartment(e.target.value)} />
+                        ) : (
+                          f.department
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editId === f.id ? (
+                          <Button variant="contained" onClick={handleUpdate}>Save</Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outlined"
+                              onClick={() => handleEdit(f)}
+                              style={{ marginRight: 8 }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              onClick={() => handleDelete(f.id)}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

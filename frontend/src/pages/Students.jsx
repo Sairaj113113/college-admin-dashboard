@@ -19,6 +19,12 @@ export default function Students() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [department, setDepartment] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const [editId, setEditId] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editDepartment, setEditDepartment] = useState("");
 
   useEffect(() => {
     fetchStudents();
@@ -46,37 +52,74 @@ export default function Students() {
     }
   };
 
+  const handleEdit = (student) => {
+    setEditId(student.id);
+    setEditName(student.name);
+    setEditEmail(student.email);
+    setEditDepartment(student.department);
+  };
+
+  const handleUpdate = async () => {
+    await api.put(`/api/students/${editId}/`, {
+      name: editName,
+      email: editEmail,
+      department: editDepartment
+    });
+    fetchStudents();
+    setEditId(null);
+    setEditName("");
+    setEditEmail("");
+    setEditDepartment("");
+  };
+
+  const filteredStudents = students.filter(s =>
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.department.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
         Students Module
       </Typography>
 
-      {/* Form to add student */}
+      {/* Add Student Form */}
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Name"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          sx={{ mr: 1 }}
+        />
+        <TextField
+          label="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          sx={{ mr: 1 }}
+        />
+        <TextField
+          label="Department"
+          value={department}
+          onChange={e => setDepartment(e.target.value)}
+          sx={{ mr: 1 }}
+        />
+        <Button variant="contained" onClick={handleAdd}>
+          Add Student
+        </Button>
+      </Box>
+
+      {/* Search Bar */}
       <TextField
-        label="Name"
-        value={name}
-        onChange={e => setName(e.target.value)}
-        sx={{ mr: 1 }}
+        label="Search"
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
+        fullWidth
+        sx={{ mb: 2 }}
       />
-      <TextField
-        label="Email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        sx={{ mr: 1 }}
-      />
-      <TextField
-        label="Department"
-        value={department}
-        onChange={e => setDepartment(e.target.value)}
-        sx={{ mr: 1 }}
-      />
-      <Button variant="contained" onClick={handleAdd}>
-        Add Student
-      </Button>
 
       {/* Students Table */}
-      <Card sx={{ mt: 3, boxShadow: 3, borderRadius: 2 }}>
+      <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
         <CardContent>
           <Table>
             <TableHead>
@@ -89,20 +132,43 @@ export default function Students() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {students.map(s => (
+              {filteredStudents.map(s => (
                 <TableRow key={s.id}>
                   <TableCell>{s.id}</TableCell>
-                  <TableCell>{s.name}</TableCell>
-                  <TableCell>{s.email}</TableCell>
-                  <TableCell>{s.department}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={() => handleDelete(s.id)}
-                    >
-                      Delete
-                    </Button>
+                    {editId === s.id ? (
+                      <TextField value={editName} onChange={e => setEditName(e.target.value)} />
+                    ) : (
+                      s.name
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editId === s.id ? (
+                      <TextField value={editEmail} onChange={e => setEditEmail(e.target.value)} />
+                    ) : (
+                      s.email
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editId === s.id ? (
+                      <TextField value={editDepartment} onChange={e => setEditDepartment(e.target.value)} />
+                    ) : (
+                      s.department
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editId === s.id ? (
+                      <Button variant="contained" onClick={handleUpdate}>Save</Button>
+                    ) : (
+                      <>
+                        <Button variant="outlined" onClick={() => handleEdit(s)} sx={{ mr: 1 }}>
+                          Edit
+                        </Button>
+                        <Button variant="outlined" color="error" onClick={() => handleDelete(s.id)}>
+                          Delete
+                        </Button>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

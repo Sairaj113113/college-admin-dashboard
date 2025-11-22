@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Grid, Card, CardContent, Typography } from "@mui/material";
+import { Grid, Card, CardContent, Typography, TextField, Button } from "@mui/material";
 import api from "../services/api";
 import {
   PieChart, Pie, Cell, Tooltip, Legend,
@@ -11,6 +11,10 @@ function Dashboard() {
   const [courseCount, setCourseCount] = useState(0);
   const [facultyCount, setFacultyCount] = useState(0);
   const [feeTotal, setFeeTotal] = useState(0);
+
+  const [attendance, setAttendance] = useState("");
+  const [marks, setMarks] = useState("");
+  const [riskResult, setRiskResult] = useState(null);
 
   useEffect(() => {
     api.get("/api/students/count")
@@ -25,19 +29,32 @@ function Dashboard() {
       .then(res => setFacultyCount(res.data.count))
       .catch(err => console.error(err));
 
-    api.get("/api/fee/total")
+    api.get("/api/fees/total")
       .then(res => setFeeTotal(res.data.total))
       .catch(err => console.error(err));
   }, []);
 
+  // ✅ Normalize feeTotal for chart display
   const summaryData = [
     { name: "Students", value: studentCount },
     { name: "Courses", value: courseCount },
     { name: "Faculty", value: facultyCount },
-    { name: "Fees", value: feeTotal }
+    { name: "Fees", value: Math.round(feeTotal / 100000) }
   ];
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+
+  const checkRisk = async () => {
+    try {
+      const response = await api.post("/api/predict", {
+        attendance: Number(attendance),
+        marks: Number(marks),
+      });
+      setRiskResult(response.data.status);
+    } catch (error) {
+      setRiskResult("Error connecting to backend");
+    }
+  };
 
   return (
     <Grid container spacing={2} style={{ padding: 20 }}>
@@ -45,9 +62,10 @@ function Dashboard() {
       {[
         { label: "Students", value: studentCount },
         { label: "Courses", value: courseCount },
-        { label: "Faculty", value: facultyCount }
+        { label: "Faculty", value: facultyCount },
+        { label: "Fees (₹)", value: feeTotal.toLocaleString() }
       ].map((item, index) => (
-        <Grid item xs={12} sm={6} md={4} key={index}>
+        <Grid item xs={12} sm={6} md={3} key={index}>
           <Card>
             <CardContent>
               <Typography variant="h6">{item.label}</Typography>
@@ -82,6 +100,9 @@ function Dashboard() {
                 <Legend />
               </PieChart>
             </div>
+            <Typography variant="caption" align="center">
+              * Fees scaled down for visualization
+            </Typography>
           </CardContent>
         </Card>
       </Grid>
@@ -101,6 +122,48 @@ function Dashboard() {
                 <Bar dataKey="value" fill="#82ca9d" />
               </BarChart>
             </div>
+            <Typography variant="caption" align="center">
+              * Fees scaled down for visualization
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Student Risk Prediction Widget */}
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6">Student Risk Prediction</Typography>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Attendance %"
+                  type="number"
+                  fullWidth
+                  value={attendance}
+                  onChange={(e) => setAttendance(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Marks"
+                  type="number"
+                  fullWidth
+                  value={marks}
+                  onChange={(e) => setMarks(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Button variant="contained" color="primary" onClick={checkRisk}>
+                  Check Risk
+                </Button>
+              </Grid>
+            </Grid>
+            {riskResult && (
+              <Typography variant="h6" style={{ marginTop: 20 }}>
+                Result: {riskResult}
+              </Typography>
+            )}
           </CardContent>
         </Card>
       </Grid>

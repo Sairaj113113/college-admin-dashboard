@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
-from backend.database import SessionLocal, engine
-from backend.models import Base, Attendance
+from database import SessionLocal, engine
+from models import Base, Attendance
 
 # Create blueprint
 attendance_bp = Blueprint("attendance", __name__)
@@ -61,6 +61,38 @@ def delete_attendance(id):
         db.delete(record)
         db.commit()
         return jsonify({"message": "Attendance deleted"}), 200
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+# ✅ PUT: update an attendance record
+@attendance_bp.put("/<int:id>/")
+def update_attendance(id):
+    payload = request.json
+    db = SessionLocal()
+    try:
+        record = db.query(Attendance).filter(Attendance.id == id).first()
+        if not record:
+            return jsonify({"error": "Attendance not found"}), 404
+
+        # Update fields if provided
+        if "student_id" in payload:
+            record.student_id = int(payload["student_id"])
+        if "course_id" in payload:
+            record.course_id = str(payload["course_id"])
+        if "percentage" in payload:
+            record.percentage = int(payload["percentage"])
+
+        db.commit()
+        db.refresh(record)
+        return jsonify({
+            "id": record.id,
+            "student_id": record.student_id,
+            "course_id": record.course_id,
+            "percentage": record.percentage
+        }), 200
     except Exception as e:
         db.rollback()
         return jsonify({"error": str(e)}), 500

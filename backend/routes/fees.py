@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
-from backend.database import SessionLocal, engine
-from backend.models import Base, Fee
+from database import SessionLocal, engine
+from models import Base, Fee
 from sqlalchemy import func   # ✅ needed for sum()
 
 fees_bp = Blueprint("fees", __name__)

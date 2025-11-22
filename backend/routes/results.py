@@ -1,10 +1,11 @@
 from flask import Blueprint, jsonify, request
-from backend.database import SessionLocal, engine
-from backend.models import Base, Result
+from database import SessionLocal, engine
+from models import Base, Result
 
 results_bp = Blueprint("results", __name__)
 Base.metadata.create_all(bind=engine)
 
+# GET: list all results
 @results_bp.get("/")
 def list_results():
     db = SessionLocal()
@@ -13,6 +14,7 @@ def list_results():
     db.close()
     return jsonify(res)
 
+# POST: add a new result
 @results_bp.post("/")
 def add_result():
     db = SessionLocal()
@@ -39,6 +41,7 @@ def add_result():
     finally:
         db.close()
 
+# DELETE: remove a result by ID
 @results_bp.delete("/<int:id>/")
 def delete_result(id):
     db = SessionLocal()
@@ -49,6 +52,38 @@ def delete_result(id):
         db.delete(result)
         db.commit()
         return jsonify({"message": "Result deleted"}), 200
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+# ✅ PUT: update a result by ID
+@results_bp.put("/<int:id>/")
+def update_result(id):
+    payload = request.json
+    db = SessionLocal()
+    try:
+        result = db.query(Result).filter(Result.id == id).first()
+        if not result:
+            return jsonify({"error": "Result not found"}), 404
+
+        # Update fields if provided
+        if "student_id" in payload:
+            result.student_id = int(payload["student_id"])
+        if "course_id" in payload:
+            result.course_id = str(payload["course_id"])
+        if "marks" in payload:
+            result.marks = int(payload["marks"])
+
+        db.commit()
+        db.refresh(result)
+        return jsonify({
+            "id": result.id,
+            "student_id": result.student_id,
+            "course_id": result.course_id,
+            "marks": result.marks
+        }), 200
     except Exception as e:
         db.rollback()
         return jsonify({"error": str(e)}), 500

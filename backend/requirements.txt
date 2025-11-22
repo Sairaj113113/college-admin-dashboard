@@ -1,5 +1,8 @@
 Flask
-Flask-Cors
-SQLAlchemy
-PyJWT
 gunicorn
+flask-cors
+SQLAlchemy
+numpy==2.3.5
+pandas==2.3.3
+scikit-learn
+joblib

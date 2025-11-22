@@ -1,11 +1,11 @@
 import axios from "axios";
 
-// Use the live backend URL on Render
 const api = axios.create({
-  baseURL: "https://college-admin-backend.onrender.com", // ✅ fixed
+  baseURL: "http://127.0.0.1:5000", // ✅ local dev
+  // Or use your Render backend link when deployed:
+  // baseURL: "https://college-admin-backend.onrender.com",
 });
 
-// Attach token automatically if present
 api.interceptors.request.use(config => {
   const token = localStorage.getItem("token");
   if (token) {

@@ -19,6 +19,13 @@ function Results() {
   const [studentId, setStudentId] = useState("");
   const [courseId, setCourseId] = useState("");
   const [marks, setMarks] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // edit states
+  const [editId, setEditId] = useState(null);
+  const [editStudentId, setEditStudentId] = useState("");
+  const [editCourseId, setEditCourseId] = useState("");
+  const [editMarks, setEditMarks] = useState("");
 
   useEffect(() => {
     fetchResults();
@@ -57,6 +64,36 @@ function Results() {
       console.error("Error deleting result:", err);
     }
   };
+
+  const handleEdit = (r) => {
+    setEditId(r.id);
+    setEditStudentId(r.student_id);
+    setEditCourseId(r.course_id);
+    setEditMarks(r.marks);
+  };
+
+  const handleUpdate = async () => {
+    try {
+      await api.put(`/api/results/${editId}/`, {
+        student_id: editStudentId,
+        course_id: editCourseId,
+        marks: parseInt(editMarks)
+      });
+      fetchResults();
+      setEditId(null);
+      setEditStudentId("");
+      setEditCourseId("");
+      setEditMarks("");
+    } catch (err) {
+      console.error("Error updating result:", err);
+    }
+  };
+
+  const filteredResults = results.filter(r =>
+    r.student_id.toString().includes(searchTerm) ||
+    r.course_id.toString().includes(searchTerm) ||
+    r.marks.toString().includes(searchTerm)
+  );
 
   return (
     <Grid container spacing={2} style={{ padding: 20 }}>
@@ -100,6 +137,17 @@ function Results() {
         </Card>
       </Grid>
 
+      {/* Search Bar */}
+      <Grid item xs={12}>
+        <TextField
+          label="Search Results"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          fullWidth
+          margin="normal"
+        />
+      </Grid>
+
       {/* Table Card */}
       <Grid item xs={12}>
         <Card>
@@ -118,21 +166,52 @@ function Results() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {results.length > 0 ? (
-                  results.map((r) => (
+                {filteredResults.length > 0 ? (
+                  filteredResults.map((r) => (
                     <TableRow key={r.id}>
                       <TableCell>{r.id}</TableCell>
-                      <TableCell>{r.student_id}</TableCell>
-                      <TableCell>{r.course_id}</TableCell>
-                      <TableCell>{r.marks}</TableCell>
                       <TableCell>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={() => handleDelete(r.id)}
-                        >
-                          Delete
-                        </Button>
+                        {editId === r.id ? (
+                          <TextField value={editStudentId} onChange={e => setEditStudentId(e.target.value)} />
+                        ) : (
+                          r.student_id
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editId === r.id ? (
+                          <TextField value={editCourseId} onChange={e => setEditCourseId(e.target.value)} />
+                        ) : (
+                          r.course_id
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editId === r.id ? (
+                          <TextField value={editMarks} onChange={e => setEditMarks(e.target.value)} />
+                        ) : (
+                          r.marks
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editId === r.id ? (
+                          <Button variant="contained" onClick={handleUpdate}>Save</Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outlined"
+                              onClick={() => handleEdit(r)}
+                              style={{ marginRight: 8 }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              onClick={() => handleDelete(r.id)}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

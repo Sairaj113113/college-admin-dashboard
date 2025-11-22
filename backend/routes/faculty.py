@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
-from backend.database import SessionLocal, engine
-from backend.models import Base, Faculty
+from database import SessionLocal, engine
+from models import Base, Faculty
 
 faculty_bp = Blueprint("faculty", __name__)
 Base.metadata.create_all(bind=engine)
@@ -63,3 +63,30 @@ def count_faculty():
     count = db.query(Faculty).count()
     db.close()
     return jsonify({"count": count})
+
+# ✅ PUT: update a faculty by ID
+@faculty_bp.put("/<int:id>/")
+def update_faculty(id):
+    payload = request.json
+    db = SessionLocal()
+    try:
+        record = db.query(Faculty).filter(Faculty.id == id).first()
+        if not record:
+            return jsonify({"error": "Faculty not found"}), 404
+
+        # Update fields if provided
+        record.name = payload.get("name", record.name)
+        record.department = payload.get("department", record.department)
+
+        db.commit()
+        db.refresh(record)
+        return jsonify({
+            "id": record.id,
+            "name": record.name,
+            "department": record.department
+        }), 200
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
